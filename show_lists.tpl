@@ -1,5 +1,6 @@
-<h1>ToDo List</h1>
+<h1>ToDo List</h1>                        {{date}}
 <h5>todo list</h5>
+
 <table>
 
 
@@ -8,7 +9,10 @@
 
     <tr>
     %for col in row:
-        <td>{{col}}</td><td>
+        <td>{{col}}</td>
+
+    %end
+    <td>
         <form action="/edit/{{id}}" method="GET">
         <input type="submit" name="passtable" value="Edit Task">
         <input type="hidden" name="table" value="todo">
@@ -20,7 +24,6 @@
         </form>
         </td>
 
-    %end
     </tr>
     %id +=1
 %end
@@ -37,7 +40,9 @@
 
     <tr>
     %for col in row:
-        <td>{{col}}</td><td>
+        <td>{{col}}</td>
+    %end
+    <td>
         <form action="/edit/{{id}}" method="GET">
         <input type="submit" name="passtable" value="Edit Task">
         <input type="hidden" name="table" value="daytodo">
@@ -48,7 +53,7 @@
           <input type="hidden" name="table" value="daytodo">
           </form>
         </td>
-    %end
+
     </tr>
     %id +=1
 %end
@@ -65,7 +70,9 @@
     <tr>
     %for col in row:
         <td>{{col}}</td>
-        <td>
+
+    %end
+    <td>
         <form action="/edit/{{id}}" method="GET">
         <input type="submit" name="passtable" value="Edit Task">
         <input type="hidden" name="table" value="weektodo">
@@ -77,8 +84,8 @@
           </form>
 
         </td>
-    %end
     </tr>
+
     %id +=1
 %end
 </table>
@@ -94,6 +101,7 @@
     <tr>
     %for col in row:
         <td>{{col}}</td>
+    %end
           <td>
           <form action="/edit/{{id}}" method="GET">
           <input type="submit" name="passtable" value="Edit Task">
@@ -106,7 +114,7 @@
           </form>
         </td>
 
-    %end
+
     </tr>
     %id +=1
 %end
@@ -124,6 +132,8 @@
     <tr>
     %for col in row:
         <td>{{col}}</td>
+
+    %end
           <td>
           <form action="/edit/{{id}}" method="GET">
           <input type="submit" name="passtable" value="Edit Task">
@@ -137,7 +147,7 @@
 
         </td>
 
-    %end
+
     </tr>
     %id +=1
 %end

@@ -2,6 +2,7 @@ __author__ = 'dan'
 
 import sqlite3
 from bottle import route, run, template, debug, request
+from datetime import date
 
 
 
@@ -11,20 +12,22 @@ from bottle import route, run, template, debug, request
 def show_picnic():
     db = sqlite3.connect('todo.db')
     c = db.cursor()
-    
-    c.execute("SELECT task FROM todo")
+    mydate = date.today()
+
+    c.execute("SELECT * FROM todo")
     data = c.fetchall()
-    c.execute("SELECT task FROM daytodo")
+
+    c.execute("SELECT * FROM daytodo")
     data2 = c.fetchall()
-    c.execute("SELECT task FROM weektodo")
+    c.execute("SELECT * FROM weektodo")
     data3 = c.fetchall()
-    c.execute("SELECT task FROM monthtodo")
+    c.execute("SELECT * FROM monthtodo")
     data4 = c.fetchall()
-    c.execute("SELECT task FROM overalltodo")
+    c.execute("SELECT * FROM overalltodo")
     data5 = c.fetchall()
     print str(data)
     c.close()
-    output = template('show_lists', rows=data, rows2=data2, week=data3, month=data4, overall=data5)
+    output = template('show_lists', rows=data, rows2=data2, week=data3, month=data4, overall=data5, date = str(mydate))
     return output
 
 
@@ -36,10 +39,10 @@ def new_item():
 
         new = request.GET.get('task','').strip()
         table = request.GET.get('table', '').strip()
-
+        deadline = request.GET.get('deadline').strip()
         db = sqlite3.connect('todo.db')
         c = db.cursor()
-        c.execute("INSERT INTO "+table + "(task, status) VALUES (?, ?)", (new, 1))
+        c.execute("INSERT INTO "+table + "(task, status, deadline) VALUES (?, ?, ?)", (new, 1, deadline))
         new_id = c.lastrowid
 
         db.commit()
@@ -57,6 +60,7 @@ def edit_item(no):
         edit = request.GET.get('task','').strip()
         status = request.GET.get('status','').strip()
         table = request.GET.get('table', '').strip()
+        deadline = request.GET.get('deadline', '').strip()
         if status == 'open':
             status = 1
         else:
@@ -64,7 +68,7 @@ def edit_item(no):
 
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("UPDATE "+ table+" SET task = ?, status = ? WHERE id LIKE ?", (edit,status,no))
+        c.execute("UPDATE "+ table+" SET task = ?, status = ?, deadline = ? WHERE id LIKE ?", (edit,status, deadline,no))
         conn.commit()
 
         return '<p>The item number %s was successfully updated</p>' %no
@@ -77,10 +81,16 @@ def edit_item(no):
         c = conn.cursor()
         c.execute("SELECT task FROM " + table + " WHERE id LIKE ?", (str(no)))
         cur_data = c.fetchone()
+        c.execute("SELECT deadline FROM " + table + " WHERE id LIKE ?", (str(no)))
+        deadline = c.fetchone()
+
+        c.execute("SELECT starttime FROM " + table + " WHERE id LIKE ?", (str(no)))
+        starttime = c.fetchone()
+        c.execute("SELECT priority FROM " + table + " WHERE id LIKE ?", (str(no)))
+        priority = c.fetchone()
 
 
-
-        return template('edit_task', old = cur_data, no = no, table = table)
+        return template('edit_task', old = cur_data, no = no, table = table, deadline = deadline, starttime = starttime, priority = priority)
 
 
 
