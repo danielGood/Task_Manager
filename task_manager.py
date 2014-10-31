@@ -9,49 +9,56 @@ from bottle import static_file
 from dateutil.parser import *
 
 
+
+
+
+
+
 @route('/')
-def show_picnic():
+def multi_list():
+
     db = sqlite3.connect('todo.db')
     c = db.cursor()
-    mydate = date.today()
-
-    c.execute("SELECT * FROM todo")
+    c.execute("SELECT task from todo")
     data = c.fetchall()
 
-    c.execute("SELECT * FROM daytodo")
-    data2 = c.fetchall()
-    c.execute("SELECT * FROM weektodo")
-    data3 = c.fetchall()
-    c.execute("SELECT * FROM monthtodo")
-    data4 = c.fetchall()
-    c.execute("SELECT * FROM overalltodo")
-    data5 = c.fetchall()
-    print str(data)
+
+
+    c.execute("SELECT * from todo INNER JOIN tbnames ON todo.tble = tbnames.name")
+    join = c.fetchall()
+    c.execute("SELECT name from tbnames WHERE active = '1'")
+    tblist = c.fetchall()
     c.close()
-    output = template('show_lists', rows=data, rows2=data2, week=data3, month=data4, overall=data5, date = str(mydate))
+    tables=seperate_tables(join, tblist)
+    output= template('show_lists', list = data, join = join, tblist=tblist, tables=tables)
     return output
 
-@route('/all')
-def show_picnic():
-    db = sqlite3.connect('todo.db')
-    c = db.cursor()
-    mydate = date.today()
 
-    c.execute("SELECT * FROM todo")
-    data = c.fetchall()
 
-    c.execute("SELECT * FROM daytodo")
-    data2 = c.fetchall()
-    c.execute("SELECT * FROM weektodo")
-    data3 = c.fetchall()
-    c.execute("SELECT * FROM monthtodo")
-    data4 = c.fetchall()
-    c.execute("SELECT * FROM overalltodo")
-    data5 = c.fetchall()
-    print str(data)
-    c.close()
-    output = template('show_lists', rows=data, rows2=data2, week=data3, month=data4, overall=data5, date = str(mydate))
-    return output
+
+def seperate_tables(join, tblist):
+
+    tables ={}
+    for row in join:
+        i =0
+        row_table=''
+        for col in row:
+            ###change this later
+            if i== 3:
+
+                row_table=(col,)
+
+            i=i+1
+        if row_table in tables:
+            temp = tables[row_table]
+            temp.append(row)
+            tables[row_table] = temp
+        if not row_table in tables:
+            tables[row_table] = [row]
+
+    return tables
+
+
 
 
 @route('/new', method='GET')
@@ -61,26 +68,14 @@ def new_item():
 
         new = request.GET.get('task','').strip()
         table = request.GET.get('table', '').strip()
-        deadline = request.GET.get('deadline').strip()
-        starttime = request.GET.get('starttime').strip()
-
-        if starttime != "":
-            starttime = parse(starttime)
-            starttime = calendar.timegm(starttime.utctimetuple())
-        else:
-            starttime = None
+        table=eval(table)[0]
+        tbleid = request.GET.get('tbleid', '').strip()
+        tbleid =eval(tbleid)+1
 
 
-        if deadline != "" :
-            deadline = parse(deadline)
-            deadline = calendar.timegm(deadline.utctimetuple())
-        else:
-            deadline = None
-
-        priority = request.GET.get('priority').strip()
         db = sqlite3.connect('todo.db')
         c = db.cursor()
-        c.execute("INSERT INTO "+table + "(task, status, deadline, starttime, priority) VALUES (?, ?, ?, ?, ?)", (new, 1, deadline, starttime, priority))
+        c.execute("INSERT INTO todo (task, status, tble, tbleid) VALUES (?, ?, ?, ?)", (new, 1, table, tbleid))
         new_id = c.lastrowid
 
         db.commit()
@@ -89,33 +84,43 @@ def new_item():
     else:
         request.GET.get('passtable','').strip()
         table = request.GET.get('table', '').strip()
-        return template('new_task.tpl', table=table)
+        tbleid = request.GET.get('tbleid', '').strip()
+        return template('new_task.tpl', table=table, tbleid=tbleid)
 
-@route('/edit/:no', method='GET')
-def edit_item(no):
+
+
+@route('/new_table', method='GET')
+def new_table():
+    if request.GET.get('save','').strip():
+        table = request.GET.get('table', '').strip()
+        db = sqlite3.connect('todo.db')
+        c = db.cursor()
+        new= 'new table'
+
+        c.execute("INSERT INTO todo (task, status, tble, tbleid) VALUES (?, ?, ?, ?)", (new, 1, table, 1))
+        c.execute("INSERT INTO tbnames (name, active) VALUES (?, ?)", (table, 1))
+        new_id = c.lastrowid
+
+        db.commit()
+        c.close()
+    else:
+        return template('new_table.tpl')
+
+
+
+@route('/edit', method='GET')
+def edit_item():
 
     if request.GET.get('save','').strip():
         edit = request.GET.get('task','').strip()
         status = request.GET.get('status','').strip()
         table = request.GET.get('table', '').strip()
-        deadline = request.GET.get('deadline', '').strip()
-
-        starttime = request.GET.get('starttime').strip()
-
-        if starttime != "":
-            starttime = parse(starttime)
-            starttime = calendar.timegm(starttime.utctimetuple())
-        else:
-            starttime = None
+        tbleid = request.GET.get('tbleid', '').strip()
 
 
-        if deadline != "" :
-            deadline = parse(deadline)
-            deadline = calendar.timegm(deadline.utctimetuple())
-        else:
-            deadline = None
 
-        priority = request.GET.get('priority').strip()
+
+
         if status == 'open':
             status = 1
         else:
@@ -123,42 +128,27 @@ def edit_item(no):
 
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("UPDATE "+ table+" SET task = ?, status = ?, deadline = ?, starttime = ?, priority = ? WHERE id LIKE ?", (edit,status, deadline, starttime, priority, no))
+        c.execute("UPDATE todo SET task = ?, status = ?, tble=?, tbleid =? WHERE tble= ? AND tbleid = ?", (edit,status, table, tbleid, table, tbleid))
         conn.commit()
 
-        return '<p>The item number %s was successfully updated</p>' %no
+        return ''
 
     else:
         request.GET.get('passtable','').strip()
         table = request.GET.get('table', '').strip()
+        tbleid = request.GET.get('tbleid', '').strip()
+        table=eval(table)[0]
+
+        tbleid=eval(tbleid)
 
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("SELECT task FROM " + table + " WHERE id LIKE ?", (str(no)))
+        c.execute("SELECT task FROM todo WHERE tble = ? AND tbleid = ?", (table, tbleid))
         cur_data = c.fetchone()
-        c.execute("SELECT deadline FROM " + table + " WHERE id LIKE ?", (str(no)))
-        deadline = c.fetchone()
-
-        c.execute("SELECT starttime FROM " + table + " WHERE id LIKE ?", (str(no)))
-        starttime = c.fetchone()
-
-        if starttime is None:
-            starttime = ""
-        else:
-            starttime =format_date(starttime)
-
-        if deadline is None:
-            deadline = ""
-        else:
-            deadline=format_date(deadline)
 
 
 
-        c.execute("SELECT priority FROM " + table + " WHERE id LIKE ?", (str(no)))
-        priority = c.fetchone()
-
-
-        return template('edit_task', old = cur_data, no = no, table = table, deadline = deadline, starttime = starttime, priority = priority)
+        return template('edit_task', old = cur_data, table = table, tbleid=tbleid)
 
 
 
@@ -167,17 +157,17 @@ def server_static():
     return static_file('style.css', root='.')
 
 
-@route('/delete/:no', method='GET')
-def delete_task(no):
+@route('/delete', method='GET')
+def delete_task():
 
     if request.GET.get('save','').strip():
 
         table = request.GET.get('table', '').strip()
-
+        tbleid = request.GET.get('tbleid', '').strip()
 
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("DELETE FROM "+ table +" WHERE id LIKE ?", (no))
+        c.execute("DELETE FROM todo WHERE tble = ? AND tbleid = ?", (table, tbleid))
         conn.commit()
 
         return '<p>task deleted</p>'
@@ -185,13 +175,17 @@ def delete_task(no):
     else:
         request.GET.get('passtable','').strip()
         table = request.GET.get('table', '').strip()
+        tbleid = request.GET.get('tbleid', '').strip()
+        table=eval(table)[0]
+
+        tbleid=eval(tbleid)
 
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("SELECT task FROM " +table+" WHERE id LIKE ?", (str(no)))
+        c.execute("SELECT task FROM todo WHERE tble = ? AND tbleid = ?", (table, tbleid))
         cur_data = c.fetchone()
 
-        return template('delete_task', old = cur_data, no = no, table = table)
+        return template('delete_task', old = cur_data, table = table, tbleid=tbleid)
 
 
 
@@ -202,6 +196,26 @@ def format_date(date):
     x = time.gmtime(date)
     s = x.tm_mday+"/"+x.tmmon+"/"+x.tm_year
     return s
+
+
+
+@route('/debug')
+def show_data():
+    db = sqlite3.connect('todo.db')
+    c = db.cursor()
+
+
+    c.execute("SELECT * from todo INNER JOIN tbnames ON todo.tble = tbnames.name")
+    join = c.fetchall()
+    c.execute("SELECT name from tbnames WHERE active = '1'")
+    tblist = c.fetchall()
+    tables=seperate_tables(join, tblist)
+
+    c.execute("SELECT * from todo")
+    data = c.fetchall()
+    c.execute("SELECT * from tbnames")
+    data2 = c.fetchall()
+    return template('debug.tpl', join=join, tblist=tblist, tables=tables, data=data, data2=data2)
 
 
 

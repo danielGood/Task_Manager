@@ -1,12 +1,21 @@
-.grid{
-   display: table;
+
+body{
+
+   background-color: yellow;
 }
 
-.row{ 
-    display: table-row;
+
+.task{
+  display: inline;
+}
+
+.edit{
+  display: inline-block;
+}
+
+
+.delete{
+  display: inline-block;
 
 }
 
-.cell{
-   display: table-cell;
-}

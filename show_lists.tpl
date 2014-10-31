@@ -1,187 +1,90 @@
 
+%def print_list(list, table):
+
+%tbleid =0
+%for row in list:
+    %i=0
+    %id=1
+
+    <div >
+    %for col in row:
+        %if i==1:
+            <div class="task">{{col}}</div>
+        %end
+        %if i==4:
+            %tbleid=col
+        %end
+
+        %i = i+1
+    %end
+
+     <div class="edit">
+<form action="/edit" method="GET">
+<input type="submit" name="passtable" value="Edit Task">
+<input type="hidden" name="table" value={{table}}>
+<input type="hidden" name="tbleid" value={{tbleid}}>
+</form>
+</div>
+<div class="delete">
+<form action="/delete" method="GET">
+<input type="submit" name="passtable" value="Delete Task">
+<input type="hidden" name="table" value={{table}}>
+<input type="hidden" name="tbleid" value={{tbleid}}>
+</form>
+</div>
+    </div>
+
+%id=id+1
+%end
+<form action="/new" method="GET">
+<input type="submit" name="passtable" value="Add Task">
+<input type="hidden" name="table" value="{{table}}">
+<input type="hidden" name="tbleid" value={{tbleid}}>
+</form>
+
+%end
+
+<%
+
+
+
+
+def print_tables():
+   for table in tblist:
+       mylist = tables[table]
+       print_list(mylist, table)
+
+
+   end
+end
+%>
+
+
+
+
+
 
 
 
 <html>
 <head>
 <link rel="stylesheet" type="text/css" href="/ref_style" media="all" />
+
 </head>
+
 <body>
 
-<h1>ToDo List</h1>                        {{date}}
-<h5>todo list</h5>
 
-<div class="grid">
+%print_tables()
+<form action="/new_table" method="GET">
+<input type="submit" name="passtable" value="Add Table">
 
-	
-%id = 1
-%for row in rows:
-
-    <div class="row">
-
-    %for col in row:
-
-        <div class="cell">{{col}}{{j}}</div>
-
-
-
-
-    %end
-    <div class="cell">
-        <form action="/edit/{{id}}" method="GET">
-        <input type="submit" name="passtable" value="Edit Task">
-        <input type="hidden" name="table" value="todo">
-        </form>
-        </div>
-        <div class="cell">
-          <form action="/delete/{{id}}" method="GET">
-        <input type="submit" name="passtable" value="Delete Task">
-        <input type="hidden" name="table" value="todo">
-        </form>
-        </div>
-
-	    </div>
-    %id +=1
-%end
-</div>
-<form action="/new" method="GET">
-<input type="submit" name="passtable" value="Add Task">
-<input type="hidden" name="table" value="todo">
 </form>
-
-<h5>daytodo list</h5>
-<div class="grid">
-%id = 1
-%for row in rows2:
-
-    <div class="row">
-    %for col in row:
-        <div class="cell">{{col}}</div>
-    %end
-    <div class="cell">
-        <form action="/edit/{{id}}" method="GET">
-        <input type="submit" name="passtable" value="Edit Task">
-        <input type="hidden" name="table" value="daytodo">
-        </form>
-        </div>
-         <div class="cell">
-        <form action="/delete/{{id}}" method="GET">
-          <input type="submit" name="passtable" value="Delete Task">
-          <input type="hidden" name="table" value="daytodo">
-          </form>
-        </div>
-
-    </div>
-    %id +=1
-%end
-</div>
-<form action="/new" method="GET">
-<input type="submit" name="passtable" value="Add Task">
-<input type="hidden" name="table" value="daytodo">
-</form>
-<h5>weektodo list</h5>
-<div class="table">
-%id = 1
-%for row in week:
-
-    <div class="row">
-    %for col in row:
-        <div class="cell">{{col}}</div>
-
-
-
-    %end
-    <div class="cell">
-        <form action="/edit/{{id}}" method="GET">
-        <input type="submit" name="passtable" value="Edit Task">
-        <input type="hidden" name="table" value="weektodo">
-        </form>
-        </div>
-         <div class="cell">
-<form action="/delete/{{id}}" method="GET">
-          <input type="submit" name="passtable" value="Delete Task">
-          <input type="hidden" name="table" value="weektodo">
-          </form>
-
-        </div>
-    </div>
-
-    %id +=1
-%end
-</div>
-<form action="/new" method="GET">
-<input type="submit" name="passtable" value="Add Task">
-<input type="hidden" name="table" value="weektodo">
-</form>
-<h5>monthtodo list</h5>
-<div class="table">
-%id = 1
-%for row in month:
-
-    <div class="row">
-    %for col in row:
-        <div class="cell">{{col}}</div>
-    %end
-          <div class="cell">
-          <form action="/edit/{{id}}" method="GET">
-          <input type="submit" name="passtable" value="Edit Task">
-          <input type="hidden" name="table" value="monthtodo">
-          </form>
-          </div>
-          <div class="cell">
-<form action="/delete/{{id}}" method="GET">
-          <input type="submit" name="passtable" value="Delete Task">
-          <input type="hidden" name="table" value="monthtodo">
-          </form>
-        </div>
-
-
-    </div>
-    %id +=1
-%end
-</div>
-<form action="/new" method="GET">
-<input type="submit" name="passtable" value="Add Task">
-<input type="hidden" name="table" value="monthtodo">
-</form>
-
-<h5>overall list</h5>
-<div class ="table">
-%id = 1
-%for row in overall:
-
-    <div class="row">
-    %for col in row:
-        <div class="cell">{{col}}</div>
-
-    %end
-          <div class="cell">
-          <form action="/edit/{{id}}" method="GET">
-          <input type="submit" name="passtable" value="Edit Task">
-          <input type="hidden" name="table" value="overalltodo">
-          </form>
-          </div><div class ="cell">
-          <form action="/delete/{{id}}" method="GET">
-          <input type="submit" name="passtable" value="Delete Task">
-          <input type="hidden" name="table" value="overalltodo">
-          </form>
-
-        </div>
-
-
-    </div>
-    %id +=1
-%end
-
-</div>
-<form action="/new" method="GET">
-<input type="submit" name="passtable" value="Add Task">
-<input type="hidden" name="table" value="overalltodo">
-</form>
-
 </body>
-</html>
 
+
+
+</html>
 
 
 
