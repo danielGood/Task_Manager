@@ -5,7 +5,9 @@
 <input type="text" name="task" value="{{old[0]}}" size="100" maxlength="100">
 
 <br/>
-<input type="hidden" name="table" value="{{table}}">
+
 <input type="submit" name="save" value="save">
+
+<input type="hidden" name="itemid" value="{{itemid}}">
 <input type="hidden" name="tbleid" value={{tbleid}}>
 </form>

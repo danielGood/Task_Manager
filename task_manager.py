@@ -24,13 +24,16 @@ def multi_list():
 
 
 
-    c.execute("SELECT * from todo INNER JOIN tbnames ON todo.tble = tbnames.name")
+    c.execute("SELECT * from todo INNER JOIN tbnames ON todo.tbleid = tbnames.id")
     join = c.fetchall()
-    c.execute("SELECT name from tbnames WHERE active = '1'")
+    c.execute("SELECT id from tbnames WHERE active = '1'")
     tblist = c.fetchall()
+    c.execute("SELECT name from tbnames WHERE active = '1'")
+    tbnames = c.fetchall()
     c.close()
     tables=seperate_tables(join, tblist)
-    output= template('show_lists', list = data, join = join, tblist=tblist, tables=tables)
+    print tbnames
+    output= template('show_lists', list = data, join = join, tblist=tblist, tables=tables, tbnames=tbnames)
     return output
 
 
@@ -44,7 +47,7 @@ def seperate_tables(join, tblist):
         row_table=''
         for col in row:
             ###change this later
-            if i== 3:
+            if i== 4:
 
                 row_table=(col,)
 
@@ -67,15 +70,17 @@ def new_item():
     if request.GET.get('save','').strip():
 
         new = request.GET.get('task','').strip()
-        table = request.GET.get('table', '').strip()
-        table=eval(table)[0]
+        itemid = request.GET.get('itemid', '').strip()
         tbleid = request.GET.get('tbleid', '').strip()
-        tbleid =eval(tbleid)+1
 
 
+        tbleid =eval(tbleid)
+        itemid=eval(itemid)+1
+        print tbleid
+        print itemid
         db = sqlite3.connect('todo.db')
         c = db.cursor()
-        c.execute("INSERT INTO todo (task, status, tble, tbleid) VALUES (?, ?, ?, ?)", (new, 1, table, tbleid))
+        c.execute("INSERT INTO todo (task, status, itemid, tbleid) VALUES (?, ?, ?, ?)", (new, 1, itemid, tbleid))
         new_id = c.lastrowid
 
         db.commit()
@@ -83,9 +88,10 @@ def new_item():
         return '<p>The new task was inserted into the database, the ID is %s</p>' % new_id
     else:
         request.GET.get('passtable','').strip()
-        table = request.GET.get('table', '').strip()
+        itemid = request.GET.get('itemid', '').strip()
         tbleid = request.GET.get('tbleid', '').strip()
-        return template('new_task.tpl', table=table, tbleid=tbleid)
+        tbleid=eval(tbleid)[0]
+        return template('new_task.tpl', itemid=itemid, tbleid=tbleid)
 
 
 
@@ -97,7 +103,12 @@ def new_table():
         c = db.cursor()
         new= 'new table'
 
-        c.execute("INSERT INTO todo (task, status, tble, tbleid) VALUES (?, ?, ?, ?)", (new, 1, table, 1))
+        c.execute("SELECT COUNT(*) from tbnames")
+        tables=c.fetchall()
+        tables=  tables[0][0]
+
+        tables = tables + 1
+        c.execute("INSERT INTO todo (task, status, itemid, tbleid) VALUES (?, ?, ?, ?)", (new, 1, 1, tables))
         c.execute("INSERT INTO tbnames (name, active) VALUES (?, ?)", (table, 1))
         new_id = c.lastrowid
 
@@ -114,8 +125,8 @@ def edit_item():
     if request.GET.get('save','').strip():
         edit = request.GET.get('task','').strip()
         status = request.GET.get('status','').strip()
-        table = request.GET.get('table', '').strip()
         tbleid = request.GET.get('tbleid', '').strip()
+        itemid = request.GET.get('itemid', '').strip()
 
 
 
@@ -128,27 +139,28 @@ def edit_item():
 
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("UPDATE todo SET task = ?, status = ?, tble=?, tbleid =? WHERE tble= ? AND tbleid = ?", (edit,status, table, tbleid, table, tbleid))
+        c.execute("UPDATE todo SET task = ?, status = ?, itemid =?, tbleid =? WHERE itemid= ? AND tbleid = ?", (edit,status, itemid, tbleid, itemid, tbleid))
         conn.commit()
 
         return ''
 
     else:
         request.GET.get('passtable','').strip()
-        table = request.GET.get('table', '').strip()
         tbleid = request.GET.get('tbleid', '').strip()
-        table=eval(table)[0]
 
-        tbleid=eval(tbleid)
+        itemid = request.GET.get('itemid', '').strip()
+
+        tbleid=eval(tbleid)[0]
+
 
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("SELECT task FROM todo WHERE tble = ? AND tbleid = ?", (table, tbleid))
+        c.execute("SELECT task FROM todo WHERE itemid = ? AND tbleid = ?", (itemid, tbleid))
         cur_data = c.fetchone()
 
 
 
-        return template('edit_task', old = cur_data, table = table, tbleid=tbleid)
+        return template('edit_task', old = cur_data, tbleid=tbleid, itemid=itemid)
 
 
 
@@ -156,36 +168,51 @@ def edit_item():
 def server_static():
     return static_file('style.css', root='.')
 
+@route('/left_arrow')
+def server_static():
+    return static_file('leftarrow.png', root='images')
+
+@route('/plus')
+def server_static():
+    return static_file('plus.png', root='images')
+
+@route('/red_x')
+def server_static():
+    return static_file('x.png', root='images')
+
 
 @route('/delete', method='GET')
 def delete_task():
 
     if request.GET.get('save','').strip():
 
-        table = request.GET.get('table', '').strip()
+        itemid = request.GET.get('itemid', '').strip()
         tbleid = request.GET.get('tbleid', '').strip()
 
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("DELETE FROM todo WHERE tble = ? AND tbleid = ?", (table, tbleid))
+        c.execute("DELETE FROM todo WHERE tbleid = ? AND itemid = ?", (tbleid, itemid))
         conn.commit()
 
         return '<p>task deleted</p>'
 
     else:
         request.GET.get('passtable','').strip()
-        table = request.GET.get('table', '').strip()
         tbleid = request.GET.get('tbleid', '').strip()
-        table=eval(table)[0]
 
-        tbleid=eval(tbleid)
+        itemid = request.GET.get('itemid', '').strip()
+
+        tbleid=eval(tbleid)[0]
+
 
         conn = sqlite3.connect('todo.db')
         c = conn.cursor()
-        c.execute("SELECT task FROM todo WHERE tble = ? AND tbleid = ?", (table, tbleid))
+        c.execute("SELECT task FROM todo WHERE itemid = ? AND tbleid = ?", (itemid, tbleid))
         cur_data = c.fetchone()
 
-        return template('delete_task', old = cur_data, table = table, tbleid=tbleid)
+
+
+        return template('delete_task', old = cur_data, tbleid=tbleid, itemid=itemid)
 
 
 

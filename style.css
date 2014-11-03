@@ -1,12 +1,14 @@
 
 body{
 
-   background-color: yellow;
+   background-color: tan;
 }
 
 
 .task{
-  display: inline;
+  display: inline-block;
+  border: 1px solid yellow;
+  max-width: 300px;
 }
 
 .edit{
@@ -19,3 +21,23 @@ body{
 
 }
 
+.rbuttons{
+  float: right;
+  vertical-align: top;
+
+}
+.row{
+margin: 25px 3px;
+
+}
+.add{
+  text-align: center;
+}
+.list{
+max-width: 500px;
+background-color: yellow;
+padding: 10px 5px;
+margin: 10px 5px;
+
+
+}

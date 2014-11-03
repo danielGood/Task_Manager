@@ -9,7 +9,7 @@
 </select>
 
 
-<input type="hidden" name="table" value="{{table}}">
+<input type="hidden" name="itemid" value="{{itemid}}">
 <input type="hidden" name="tbleid" value={{tbleid}}>
 <input type="submit" name="save" value="save">
 </form>
